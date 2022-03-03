@@ -41,10 +41,28 @@ def main():
     gs = ChessEngine.GameState()
     loadImages()  # Only do this once, before the while loop
     running = True
+    sqSelected = ()  # Keep track of the last click of the user. No square is selected initially. It's a tuple(row,column)
+    playerClicks = []  # Keep track of the player clicks(two tuples : [(7,4), (5,4)])
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos()  # This is the (x,y) location of the mouse
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sqSelected == (row, col):  # Checking if the user is clicking the same square after clicking any piece.
+                    sqSelected = ()  # If the click is on same square as selected, then will clear selected square
+                    playerClicks = []  # And will clear the next square clicked.
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected)  # We append for both first and second clicks
+                if len(playerClicks) == 2:  # After the 2nd click
+                    move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                    print(move.getChessNotation())
+                    gs.makeMove(move)
+                    sqSelected = ()  # Reset the user clicks
+                    playerClicks = []  #
 
         drawGameState(screen, gs)
         clock.tick(MAX_FPS)
@@ -71,7 +89,7 @@ Function drawBoard will draw the squares and the board on the screen. The top le
 
 
 def drawBoard(screen):
-    colors = [p.Color("beige"), p.Color("limegreen")] # first color is white and second color is black
+    colors = [p.Color("beige"), p.Color("limegreen")]  # first color is white and second color is black
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r + c) % 2)]
